@@ -1,20 +1,24 @@
-# Data-Cleaning-Process-Documentation
+# WELCOME TO MY DATA CLEANING CHALLENGE DOCUMENTATION
 
-![R](https://user-images.githubusercontent.com/64113122/225509613-1dba51c8-e7b7-4f3f-b744-5d502e4b675e.jpeg)
+## This is my journey of the #dataCleaningChallenge organized by @PromiseNonso_ and @vicSomadina via twitter.
 
-A data cleaning challenge process documentation. This is a walk-through of how I cleaned the data provided in the challenge using the Microsoft Excel Power Query.
+### This data cleaning project focuses on cleaning and preparing a large dataset of FIFA 2021 data for further analysis. The goal of this project is to transform the messy and inconsistent data into a clean and structured format suitable for generating insights and making data-driven decisions.
 
-## Data cleaning process are as follows:
-- Importing Data
-- Spliting and Merging columns
-- Rebuilding missing data
-- Standardization
-- Normalization
-- Exporting data
+### The original dataset is available on [Kaggle](https://www.kaggle.com/)
 
-NB: This is not the entire process, just the major ones and also the process are not exactly in order because it was a really messy data so some process have to be repeated after moving on to another process, its fun and also challenging one for a data analyst student hoping to get their hands dirty and it also help what you've been learning stick.
+### The goal of the data cleaning process is to: Removing duplicates, Handling missing values, Standardizing formats, etc.
+  
+### The whole cleaning process is going to be done using Microsoft Excel & Power Query
 
-## White Spaces
+### Please note that the described steps are not a comprehensive representation of the entire process. Additionally, the steps are not strictly sequential due to the complexity of the messy data; sometimes, i may need to revisit certain steps after moving on to others. This experience offers an exciting and challenging opportunity for a data analyst student to gain practical experience, helping to reinforce and solidify their learning.
+
+
+
+## Load the raw data into Power Query.
+#### This is what it looks like
+![Screenshot (18)](https://github.com/Korede34/Data-cleaning-process-documentation/assets/64113122/6e04fa04-a61c-42e7-81ad-a3d0cd9aab4b)
+
+
 After loading the data into the Power Query, the rows and columns were full of unnecessary white spaces which i get rid of by navigating to the View Tab in the ribbon then unchecking the show white space's check box.
 ## Before 
 ![image](https://user-images.githubusercontent.com/64113122/225513067-11fdff0d-4206-469c-b62e-48437ed90e0c.png)
