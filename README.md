@@ -1,64 +1,92 @@
-MY DATA CLEANING PROJECT WITH SQL
+# MY DATA CLEANING PROJECT WITH SQL
 Data Wrangling - also referred to as data cleaning, data remediation, or data munging - encompasses a range of processes aimed at converting raw data into more easily usable formats. This step is crucial for successful data analysis as it enables proper and efficient data examination, leading to informed business decisions.
-PROJECT OVERVIEW
+
+## PROJECT OVERVIEW
 In this project, I will meticulously detail every step I undertook to remediate a substantial FIFA 2021 dataset. This dataset was sourced from Kaggle and contains comprehensive records of over 18,000 players, featuring information such as ID, Name, Age, Country, Club, and numerous other attributes across 77 columns.
 My motivation for selecting this dataset is to demonstrate my proficiency in working with poorly formatted variables, rectifying data inconsistencies to establish a well-structured dataset devoid of errors during subsequent analysis. My aim is to showcase my ability to transform exceedingly messy data into a clean and usable format.
-DATA PREPARATION
+
+## DATA PREPARATION
 Prior to importing the dataset into Microsoft SQL Server Management Studio (MSSMS), I initially opened the dataset in Excel and saved it as an xlsx file. This saved file was then imported into MSSMS using the MSSMS Import and Export wizard.
 DATA CLEANING PROCESS
 The steps I executed during the data cleaning project within MSSMS encompassed the following phases:
-•	Data Discovery: Examining the dataset to gain insights into its structure, dimensions, and initial quality.
-•	Data Structuring: Organizing and structuring the data for analysis, including reformatting incorrectly formatted data types.
-•	Cleaning: Addressing data entry inconsistencies and irregularities, handling missing or blank values, identifying, and resolving duplicates, and other necessary data quality enhancements.
+- Data Discovery: Examining the dataset to gain insights into its structure, dimensions, and initial quality.
+- Data Structuring: Organizing and structuring the data for analysis, including reformatting incorrectly formatted data types.
+- Cleaning: Addressing data entry inconsistencies and irregularities, handling missing or blank values, identifying, and resolving duplicates, and other necessary data quality enhancements.
+  
 By meticulously following these steps, I aimed to transform the FIFA 2021 dataset into a clean, well-organized, and error-free resource, ready for in-depth analysis and valuable insights. This project serves as a testament to my data wrangling skills and my ability to turn challenging data into an asset for decision-making.
 
-LET’S GET STARTED!!!
+## LET’S GET STARTED!!!
 You can take a look at the entire SQL code here on my GitHub profile.
 I used Microsoft SQL Server Management Studio to develop this project.
-DATA DISCOVERY
-		select * from FifaData.dbo.FIFA2021DATA
- 
 
-COLUMN STANDARDIZATION
+## DATA DISCOVERY
+```SQL
+select * from FifaData.dbo.FIFA2021DATA
+ ```
+![image](https://github.com/Korede34/DATA-CLEANING-PROJECT-WITH-SQL/assets/64113122/492de8d7-3dc7-4f4c-98f5-a90d05db340b)
+
+
+## COLUMN STANDARDIZATION
 When I initially examined my dataset, I observed that both the 'NAME' and 'LONGNAME' columns contained inconsistent data. However, the 'PLAYERURL' column consistently held the full names of the players. I decided to extract this information from the 'PLAYERURL' column and create a new column named 'FULLNAME.' Consequently, I eliminated the previous two inconsistent columns.
+
 Procedure:
 Step 1: Adding a Temporary Column
-1.	Added a new column named "tempcol" to the existing table.
+Added a new column named "tempcol" to the existing table.
+```SQL
 -- Create a temporary column that stores the first substring from the playerUrl
 alter table FifaData.dbo.FIFA2021DATA
 add TempCol Nvarchar(255);
-2.	Wrote SQL queries to manipulate the data within "playerUrl" to extract the player names.
+```
+
+Wrote SQL queries to manipulate the data within "playerUrl" to extract the player names.
+```SQL
 -- Reversing the string and counting manually counting from the number of strings before the name 
 -- Which is where the substring will start extracting from
 -- Updating the created column with the substring data
 update FifaData.dbo.FIFA2021DATA
 set TempCol = substring(reverse(playerUrl), 9, LEN(playerUrl))
 from FifaData.dbo.FIFA2021DATA
+```
+
 Step 2: Adding the Fullname Column
-1.	Added a new column named "Fullname" to the existing table.
+Added a new column named "Fullname" to the existing table.
+```SQL
 -- Create the fullname column that stores the second substring from the TempCol 
 -- Which is the names of the players
 alter table FifaData.dbo.FIFA2021DATA
 add Fullname Nvarchar(255);
-2.	Wrote SQL queries to manipulate the data within "tempcol" to extract the player names.
+```
+
+Wrote SQL queries to manipulate the data within "tempcol" to extract the player names.
+```SQL
 -- Update the fullname column with string extracted from the TempCol
 update FifaData.dbo.FIFA2021DATA
 set Fullname = reverse(substring((TempCol), 1, CHARINDEX('/', TempCol)-1)) 
 from FifaData.dbo.FIFA2021DATA
+```
 
 Step 3: Dropping columns that are no more needed
+```SQL
 -- Droppping uneccessary columns
 alter table FifaData.dbo.FIFA2021DATA
 drop column TempCol, TempCol2, Name, LongName, photoUrl, playerUrl
+```
+
 Step 4: Replace the dashes in the name and capitalize them.
+```SQL
 -- Replace the '-' with space and capitalize the names
 update FifaData.dbo.FIFA2021DATA
 set Fullname = upper(replace(Fullname, '-', ' '))
 from FifaData.dbo.FIFA2021DATA
+```
 Before:
- 
-Result
-  
+
+![image](https://github.com/Korede34/DATA-CLEANING-PROJECT-WITH-SQL/assets/64113122/5edc30ca-8c2b-4e6d-9b89-c7243d8ac6ea)
+
+After:
+
+![image](https://github.com/Korede34/DATA-CLEANING-PROJECT-WITH-SQL/assets/64113122/f4587c5a-ad61-4de7-824a-9745b0d5b45b)
+
 
 The dataset now has a standardized "fullname" column, and redundant columns "name" and "longname" have been removed.
 COLUMN NORMALIZATION
