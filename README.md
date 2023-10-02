@@ -89,39 +89,156 @@ After:
 
 
 The dataset now has a standardized "fullname" column, and redundant columns "name" and "longname" have been removed.
-COLUMN NORMALIZATION
+
+## COLUMN NORMALIZATION
 The primary goal was to scale various columns within our dataset to the percentage format, allowing for uniform representation of percentage-based data points.
 For each relevant column, integers were converted into decimals by dividing the integer values by 100. This transformation ensured that the data, originally presented as whole numbers, were accurately scaled to fit within the percentage range of 0 to 100. 
-The SQL statement `set BOV_ = BOV/100.0` was utilized to convert integer values in the column `YourColumn` into decimal format, representing percentages.
+The SQL statement 
+```SQL 
+set BOV_ = BOV/100.0
+```
+was utilized to convert integer values in the column `BOV`  and other relevant columns into decimal format, representing percentages.
 The initial columns were dropped after and the new created columns replaced them.
+
 Before:
- 
+
+![image](https://github.com/Korede34/DATA-CLEANING-PROJECT-WITH-SQL/assets/64113122/dc8f651b-0f10-49c5-af6c-a8550fed1626)
+
 After:
- 
 
+![image](https://github.com/Korede34/DATA-CLEANING-PROJECT-WITH-SQL/assets/64113122/aff425cd-7c74-4fec-91e9-5e5c94148a5f)
 
-
-COLUMN UNIT STANDARDIZATION
+## COLUMN UNIT STANDARDIZATION
 The dataset contained heights recorded in both centimeter (cm) and in feet and inches (e.g., 6'7"), weights recorder in kilogram (kg) and pounds (lbs), leading to inconsistencies and potential misinterpretations. To ensure accuracy and uniformity, a crucial step was taken to convert all weight values to pounds, and all height values to inches.
-Height Conversion
+
+### Height Conversion
 Heights, presented in both centimeters (cm) and the feet and inches format (e.g., 6'7"), were standardized into inches (inch). For centimeters, the conversion factor of 1 cm equals approximately 0.393701 inches was applied. For the feet and inches format, the feet value was multiplied by 12 to convert it into inches, which was then added to the remaining inches.
 The query:
+```SQL
+-- Convert Height to inches and update the table
+update FifaData.dbo.FIFA2021DATA
+set Height_In_Inch =
+CASE 
+    -- If the value contains 'cm', convert cm to inches (1 cm = 0.393701 inches)
+    WHEN Height LIKE '%cm' THEN CAST(REPLACE(Height, 'cm', '') AS FLOAT) * 0.393701
+    -- If the value contains feet and inches (e.g., 6'7"), convert to inches (1 foot = 12 inches)
+    WHEN Height LIKE '%"%' THEN CAST(LEFT(Height, 1) AS FLOAT) * 12 + CAST(SUBSTRING(Height, len(Height) - 1, 1) AS FLOAT)
+    -- For other cases, assume the value is already in inches
+    ELSE CAST(Height AS FLOAT)
+END
+from FifaData.dbo.FIFA2021DATA
+```
 
 Before: This shows that we are having inconsistencies in the Height column
- 
+
+![image](https://github.com/Korede34/DATA-CLEANING-PROJECT-WITH-SQL/assets/64113122/aa194da1-a3a4-4950-bb1a-77a94ee0de27)
+
+
 After: This inconsistencies as now been fixed and the column has been standardized
- 
-Weight Conversion:The weight data in the dataset shows a variety of formats, including 'kg' and 'lbs' appended to the numerical values (e.g., '23kg', '44lbs'). To ensure uniformity, a two-step approach was adopted.
-1. Handling 'kg' Values:
+
+![image](https://github.com/Korede34/DATA-CLEANING-PROJECT-WITH-SQL/assets/64113122/6fd49541-9c2a-4759-90e6-e0cb19a76a5a)
+
+### Weight Conversion
+The weight data in the dataset shows a variety of formats, including 'kg' and 'lbs' appended to the numerical values (e.g., '23kg', '44lbs'). To ensure uniformity, a two-step approach was adopted.
+
+#### Handling 'kg' Values:
    - Values with 'kg' units were first parsed to remove the 'kg' suffix.
    - The parsed values were then converted to floating-point numbers to ensure numerical accuracy.
    - These numerical values were subsequently converted into pounds using the conversion factor of 1 kilogram equals approximately 2.20462 pounds.
 
-2. **Handling 'lbs' Values:**
+#### Handling 'lbs' Values:
    - Values with 'lbs' units were parsed to remove the 'lbs' suffix.
    - The parsed values were converted to floating-point numbers directly since the goal was to represent all weights in pounds uniformly.
 
-By applying these steps, all weight values, regardless of their original unit representation, were harmonized into pounds. The meticulous removal of units and conversion into a consistent unit of measurement not only standardized the dataset but also enabled precise weight comparisons and analyses. This methodological rigor ensured that the weight data adhered to a single unit across the entire dataset, eliminating discrepancies and enhancing the dataset's coherence and analytical integrity.
-Methodology: The process involved converting weight from kilograms (kg) to pounds (lbs) and height from centimeter (cm) and in feet and inches(e.g., 6'7") to inches (inch) using a simple conversion factor: 1 kilogram equals approximately 2.20462 pounds, 1 cm equals approximately 0.393701 inches and feet to inches (by multiplying by 12), adds the inches.Each values in weight column was converted to pounds and each values in height column was converted to inches, providing the equivalent value in pounds and equivalent value in inches. This systematic approach ensured that all height dat adhered to the same unit of measurement and all the weight data adhered to the same unit of measurement.
+The Query:
+```SQL
+-- Convert Weight to Lbs and update the table
+update FifaData.dbo.FIFA2021DATA
+set Weight_In_Lbs =
+CASE 
+    -- If the value contains 'kg', convert kg to lbs (1 kg = 2.20462 pounds)
+    WHEN Weight LIKE '%kg' THEN CAST(REPLACE(Weight, 'kg', '') AS FLOAT) * 2.20462
+    -- If the value contains lbs, remove the appended 'lbs' and convert to float
+    WHEN Weight LIKE '%lbs' THEN CAST(REPLACE(Weight, 'lbs', '') AS FLOAT)
+    -- For other cases, assume the value is already in lbs
+    ELSE CAST(Weight AS FLOAT)
+END
+from FifaData.dbo.FIFA2021DATA
+```
+Result:
 
+![image](https://github.com/Korede34/DATA-CLEANING-PROJECT-WITH-SQL/assets/64113122/282ab0df-429f-407a-91ad-d5392689ef26)
 
+## Currency and Unit Normalization
+Within the dataset, the columns Value, Wage, and Release Clause had some special characters that needed fixing. These columns featured the Euro sign (â‚¬) before the numerical values, indicating amounts in euros. These euro values were then converted to dollars using the average 2021 exchange rate. Additionally, the values were tagged with 'K' for thousands and 'M' for millions. To make sure the data was consistent for accurate analysis, i performed the following steps:
+
+### Approach:
+1. Identify Euro Values:
+   - I locate rows containing the euro symbol (â‚¬) in the respective columns: `Value`, `Wage`, and `Release Clause`.
+   - I identify values denoted in millions (M) or thousands (K).
+
+2. Conversion Process:
+   - Millions Conversion:
+     - Eliminate the euro symbol (â‚¬) and the 'M' suffix.
+     - Convert the numeric part to float.
+     - Multiply by 1,000,000 to get the equivalent value in euros.
+     - Multiply by the exchange rate of 1.183 to convert to US dollars.
+       
+   - Thousands Conversion:
+     - Eliminate the euro symbol (â‚¬) and the 'K' suffix.
+     - Convert the numeric part to float.
+     - Multiply by 1,000 to get the equivalent value in euros.
+     - Multiply by the exchange rate of 1.183 to convert to US dollars.
+       
+   - Other Values:
+     - Eliminate the euro symbol (â‚¬).
+     - Convert the numeric part to float.
+     - Multiply by the exchange rate of 1.183 to convert to US dollars.
+
+3. SQL Implementation:
+   - Utilized SQL `CASE` statements to handle different scenarios for millions, thousands, and other values.
+   - Replaced euro symbols and suffixes ('M', 'K') with empty strings.
+   - Converted numeric parts to floats and applied necessary multiplications for conversion.
+   - Applied the exchange rate of 1.183 to get the final values in US dollars.
+
+SQL QUERY
+```SQL
+update FifaData.dbo.FIFA2021DATA
+set ValueIN$ = 
+			case
+				-- Eliminate "â‚¬", "M", convert to million then convert to $ using $1.183 per euro xchnage rate
+				when Value like '%â‚¬%' and Value like '%M%' then (cast(replace(replace(Value, 'â‚¬', ''), 'M', '') as float) * 1000000) * 1.183
+				-- Eliminate "â‚¬", "K", convert to thousand then convert to $ using $1.183 per euro xchnage rate
+				when Value like '%â‚¬%' and Value like '%K%' then (cast(replace(replace(Value, 'â‚¬', ''), 'K', '') as float) * 1000) * 1.183
+				-- Eliminate "â‚¬", convert to float then convert to $ using $1.183 per euro xchnage rate
+				else cast(replace(Value, 'â‚¬', '') as float) * 1.183
+			end,
+	WageIN$ = 
+			case
+				-- Eliminate "â‚¬", "M", convert to million then convert to $ using $1.183 per euro xchnage rate
+				when Wage like '%â‚¬%' and Wage like '%M%' then (cast(replace(replace(Wage, 'â‚¬', ''), 'M', '') as float) * 1000000) * 1.183
+				-- Eliminate "â‚¬", "K", convert to thousand then convert to $ using $1.183 per euro xchnage rate
+				when Wage like '%â‚¬%' and Wage like '%K%' then (cast(replace(replace(Wage, 'â‚¬', ''), 'K', '') as float) * 1000) * 1.183
+				-- Eliminate "â‚¬", convert to float then convert to $ using $1.183 per euro xchnage rate
+				else cast(replace(Wage, 'â‚¬', '') as float) * 1.183
+			end,
+	Release_ClauseIN$ = 
+			case
+				-- Eliminate "â‚¬", "M", convert to million then convert to $ using $1.183 per euro xchnage rate
+				when [Release Clause] like '%â‚¬%' and [Release Clause] like '%M%' then (cast(replace(replace([Release Clause], 'â‚¬', ''), 'M', '') as float) * 1000000) * 1.183
+				-- Eliminate "â‚¬", "K", convert to thousand then convert to $ using $1.183 per euro xchnage rate
+				when [Release Clause] like '%â‚¬%' and [Release Clause] like '%K%' then (cast(replace(replace([Release Clause], 'â‚¬', ''), 'K', '') as float) * 1000) * 1.183
+				-- Eliminate "â‚¬", convert to float then convert to $ using $1.183 per euro xchnage rate
+				else cast(replace([Release Clause], 'â‚¬', '') as float) * 1.183
+			end
+from FifaData.dbo.FIFA2021DATA
+```
+Before:
+
+![image](https://github.com/Korede34/DATA-CLEANING-PROJECT-WITH-SQL/assets/64113122/7c830cee-3711-49de-95f5-8f44b262492b)
+
+After: 
+
+![image](https://github.com/Korede34/DATA-CLEANING-PROJECT-WITH-SQL/assets/64113122/a62576f6-b72b-4704-b1ec-d5dfeb694aee)
+
+The columns `ValueIN$`, `WageIN$`, and `Release_ClauseIN$` now contain the corresponding values in US dollars after the conversion process.
