@@ -91,7 +91,7 @@ After:
 The dataset now has a standardized "fullname" column, and redundant columns "name" and "longname" have been removed.
 
 ## COLUMN NORMALIZATION
-The primary goal was to scale various columns within our dataset to the percentage format, allowing for uniform representation of percentage-based data points.
+The primary goal was to scale various columns within the dataset to the percentage format, allowing for uniform representation of percentage-based data points.
 For each relevant column, integers were converted into decimals by dividing the integer values by 100. This transformation ensured that the data, originally presented as whole numbers, were accurately scaled to fit within the percentage range of 0 to 100. 
 The SQL statement 
 ```SQL 
@@ -129,7 +129,7 @@ END
 from FifaData.dbo.FIFA2021DATA
 ```
 
-Before: This shows that we are having inconsistencies in the Height column
+Before: This shows that there are having inconsistencies in the Height column
 
 ![image](https://github.com/Korede34/DATA-CLEANING-PROJECT-WITH-SQL/assets/64113122/aa194da1-a3a4-4950-bb1a-77a94ee0de27)
 
@@ -233,6 +233,7 @@ set ValueIN$ =
 			end
 from FifaData.dbo.FIFA2021DATA
 ```
+
 Before:
 
 ![image](https://github.com/Korede34/DATA-CLEANING-PROJECT-WITH-SQL/assets/64113122/7c830cee-3711-49de-95f5-8f44b262492b)
@@ -242,3 +243,134 @@ After:
 ![image](https://github.com/Korede34/DATA-CLEANING-PROJECT-WITH-SQL/assets/64113122/a62576f6-b72b-4704-b1ec-d5dfeb694aee)
 
 The columns `ValueIN$`, `WageIN$`, and `Release_ClauseIN$` now contain the corresponding values in US dollars after the conversion process.
+
+
+## Standardizing Player Contract Dates
+
+Upon thorough examination of the dataset, it became evident that the columns *Contract*, *Joined*, and *Loan End Date* held crucial information regarding players' contract start and end dates, loan start and end dates, as well as instances of players marked as "Free" (indicating no contractual obligation). However, these columns exhibited inconsistencies and redundancies.
+
+The *Contract* column housed data related to the player's contract start year, contract end year, loan end date, and instances marked as "Free." Meanwhile, the *Joined* column contained both contract start dates and loan start dates. Lastly, the *Loan End Date* column denoted the end date of player loans.
+
+See the screenshot below
+
+![image](https://github.com/Korede34/DATA-CLEANING-PROJECT-WITH-SQL/assets/64113122/87d18014-fd07-4e3b-a3f8-dd69aaca4352)
+
+To address these inconsistencies, i harmonized the data and eliminating redundant entries to ensures a clean and properly formatted columns.
+
+### Approach:
+1. Created a New Column for Contract Status:
+I established a fresh column named "ContractStatus" to house information about free players, as well as players on loan or under contract. For free players, the data was extracted from the existing "Contract" column. To ensure completeness, I filled the null values by verifying the player's status. If they were on contract, the field was populated with "On Contract," and for players on loan, it was marked as "On Loan."
+
+SQL Query
+```SQL
+-- Creating the Contract status column
+alter table FifaData.dbo.FIFA2021DATA
+add ContractStatus nvarchar(255)
+
+-- Updating the contract status column with the Contract column
+update FifaData.dbo.FIFA2021DATA
+set ContractStatus = 
+		case
+			when Contract like '%Free%' then Contract
+			when Contract like '%Loan%' then 'On Loan'
+			else 'On Contract'
+		end
+from FifaData.dbo.FIFA2021DATA
+```
+Result:
+	
+![image](https://github.com/Korede34/DATA-CLEANING-PROJECT-WITH-SQL/assets/64113122/981d78d6-6655-4842-bed9-ab8bc2c0777b)
+
+
+2. Created two new columns for Contract Start Date and Contract End Date:
+
+Contract End Date Extraction: The contract end dates were sourced from the existing "Contract" column, which contained data in the format "2004 ~ 2023." The earlier year represented the contract start date, while the latter indicated the contract's end. Using the PARSENAME function, I precisely extracted the second year, denoting the contract's end date, and stored it in the Contract End Date column.
+
+Contract Start Date Extraction: Simultaneously, the Contract Start Date was extracted from the "Joined" column, ensuring a comprehensive representation of player contract durations.
+
+SQL Query
+```SQL
+--Creating the ContractStartDate column and the ContractEndDate column
+alter table FifaData.dbo.FIFA2021DATA
+add ContractStartDate date, ContractEndDate nvarchar(255)
+
+
+-- Updating the ContractStartDate column using the Joined column
+update FifaData.dbo.FIFA2021DATA
+set ContractStartDate = 
+		case
+			when Contract not like '%Loan%' and Contract not like '%Free%' and isdate(Joined) = 1 then Joined
+			else null
+		end
+from FifaData.dbo.FIFA2021DATA
+
+---- Updating the ContractEndDate column using the Joined column
+update FifaData.dbo.FIFA2021DATA
+set ContractEndDate = 
+		case
+			when Contract not like '%Loan%' and Contract not like '%Free%' 
+			then parsename(replace(Contract, '~', '.'), 1)
+			else null
+		end
+from FifaData.dbo.FIFA2021DATA
+```
+Result: 
+
+![image](https://github.com/Korede34/DATA-CLEANING-PROJECT-WITH-SQL/assets/64113122/2ac2860d-547f-4774-9436-1b90940aacc9)
+
+
+3. Created two new columns for LoanStartDate, LoanEndDate:
+
+Loan Start Date Extraction: The Loan Start Date was extracted from the "Joined" column, by checking if the innitial "Loan End Date" column is not empty and ensuring a comprehensive representation of player Loan durations.
+
+Loan End Date Extraction: To capture the Loan End Dates, I implemented a straightforward approach. First, I checked the "Loan End Date" column for non-empty values. If a value existed, I transferred it to the new Loan End Date column. This strategic move was essential to rectify the data format. The original "Loan End Date" column, being a string, required a more precise data type for accurate storage. Therefore, the creation of a designated column with the appropriate data type ensured the seamless and accurate representation of loan end dates in the dataset.
+
+SQL Query
+```SQL
+--Creating the LoanStartDate column and the LoanEndDate column
+alter table FifaData.dbo.FIFA2021DATA
+add LoanStartDate date, LoanEndDate date
+
+-- Updating the LoanStartDate
+update FifaData.dbo.FIFA2021DATA
+set LoanStartDate = 
+	case
+		when [Loan Date End] is not null and isdate(Joined) = 1 then Joined
+		else null
+	end
+from FifaData.dbo.FIFA2021DATA
+
+-- Updating the LoanEndDate
+update FifaData.dbo.FIFA2021DATA
+set LoanEndDate = 
+	case
+		when [Loan Date End] is not null and isdate([Loan Date End]) = 1 then [Loan Date End]
+		else null
+	end
+from FifaData.dbo.FIFA2021DATA
+
+```
+Result: 
+
+![image](https://github.com/Korede34/DATA-CLEANING-PROJECT-WITH-SQL/assets/64113122/1dd6d7c2-9b93-4a82-8f29-629236aa208d)
+
+
+4. Dropping the column that are no more needed
+```SQL
+--Dropping columns
+alter table FifaData.dbo.FIFA2021DATA
+drop Contract, Joined, [Loan Date End]
+```
+
+### Before the four approach
+
+![image](https://github.com/Korede34/DATA-CLEANING-PROJECT-WITH-SQL/assets/64113122/60f08239-28b6-430d-acab-5f7ee2167df4)
+
+
+### After the four approach
+
+![image](https://github.com/Korede34/DATA-CLEANING-PROJECT-WITH-SQL/assets/64113122/06603087-8f17-4636-be31-3cdcff3a86ff)
+
+
+
+
