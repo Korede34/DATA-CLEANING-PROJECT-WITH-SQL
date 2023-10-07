@@ -172,7 +172,7 @@ Result:
 ## Currency and Unit Normalization
 Within the dataset, the columns Value, Wage, and Release Clause had some special characters that needed fixing. These columns featured the Euro sign (â‚¬) before the numerical values, indicating amounts in euros. These euro values were then converted to dollars using the average 2021 exchange rate. Additionally, the values were tagged with 'K' for thousands and 'M' for millions. To make sure the data was consistent for accurate analysis, i performed the following steps:
 
-### Approach:
+### Approach
 1. Identify Euro Values:
    - I locate rows containing the euro symbol (â‚¬) in the respective columns: `Value`, `Wage`, and `Release Clause`.
    - I identify values denoted in millions (M) or thousands (K).
@@ -372,5 +372,45 @@ drop Contract, Joined, [Loan Date End]
 ![image](https://github.com/Korede34/DATA-CLEANING-PROJECT-WITH-SQL/assets/64113122/06603087-8f17-4636-be31-3cdcff3a86ff)
 
 
+## Cleaning and Standardizing W/F, SM, IR Columns
+This columns with ratings (1-5 stars) contain diacritics, introducing inconsistencies in the data. To maintain uniformity and ensure accurate analysis, the following approach has been implemented to remove these diacritics and standardize the rating format.
 
+### Approach:
+
+1. Create new columns to store the standardize data
+
+SQL Query:
+```SQL
+-- Creating new columns for W/F, SM, IR
+ALTER TABLE FifaData.dbo.FIFA2021DATA
+ADD [W/F_] int, SM_ int, IR_ int
+```
+
+2. Populate the newly created columns with cleaned data, where diacritics have been removed and extraneous spaces trimmed, sourced from the original columns.
+
+SQL Query:
+```SQL
+-- Updating the newly created columns
+update FifaData.dbo.FIFA2021DATA
+set [W/F_] = rtrim(ltrim(replace([W/F], 'â˜…', ''))),
+	SM_ = rtrim(ltrim(replace(SM, 'â˜…', ''))),
+	IR_ = rtrim(ltrim(replace(IR, 'â˜…', '')))
+from  FifaData.dbo.FIFA2021DATA
+```
+
+3. Drop the intial columns
+SQL Query:
+```SQL
+--Dropping the intial columns
+alter table FifaData.dbo.FIFA2021DATA
+drop column [W/F], SM, IR
+```
+
+Before:
+
+![image](https://github.com/Korede34/DATA-CLEANING-PROJECT-WITH-SQL/assets/64113122/b13e2eeb-c374-4c71-bd7e-ce9e6bef9e5f)
+
+After: 
+
+![image](https://github.com/Korede34/DATA-CLEANING-PROJECT-WITH-SQL/assets/64113122/a7b277fc-01ba-481e-9a00-ad3b521bf701)
 
