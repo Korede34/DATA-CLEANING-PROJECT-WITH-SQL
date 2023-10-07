@@ -70,13 +70,13 @@ add Height_In_Inch FLOAT;
 -- Convert Height to inches and update the table
 update FifaData.dbo.FIFA2021DATA
 set Height_In_Inch = CASE 
-						-- If the value contains 'cm', convert cm to inches (1 cm = 0.393701 inches)
-						WHEN Height LIKE '%cm' THEN CAST(REPLACE(Height, 'cm', '') AS FLOAT) * 0.393701
-						-- If the value contains feet and inches (e.g., 6'7"), convert to inches (1 foot = 12 inches)
-						WHEN Height LIKE '%"%' THEN CAST(LEFT(Height, 1) AS FLOAT) * 12 + CAST(SUBSTRING(Height, len(Height) - 1, 1) AS FLOAT)
-						-- For other cases, assume the value is already in inches
-						ELSE CAST(Height AS FLOAT)
-					END
+			-- If the value contains 'cm', convert cm to inches (1 cm = 0.393701 inches)
+			WHEN Height LIKE '%cm' THEN CAST(REPLACE(Height, 'cm', '') AS FLOAT) * 0.393701
+			-- If the value contains feet and inches (e.g., 6'7"), convert to inches (1 foot = 12 inches)
+			WHEN Height LIKE '%"%' THEN CAST(LEFT(Height, 1) AS FLOAT) * 12 + CAST(SUBSTRING(Height, len(Height) - 1, 1) AS FLOAT)
+			-- For other cases, assume the value is already in inches
+			ELSE CAST(Height AS FLOAT)
+		END
 from FifaData.dbo.FIFA2021DATA
 
 
@@ -88,13 +88,13 @@ add Weight_In_Lbs FLOAT;
 -- Convert Weight to Lbs and update the table
 update FifaData.dbo.FIFA2021DATA
 set Weight_In_Lbs = CASE 
-						-- If the value contains 'kg', convert kg to lbs (1 kg = 2.20462 pounds)
-						WHEN Weight LIKE '%kg' THEN CAST(REPLACE(Weight, 'kg', '') AS FLOAT) * 2.20462
-						-- If the value contains lbs, remove the appended 'lbs' and convert to float
-						WHEN Weight LIKE '%lbs' THEN CAST(REPLACE(Weight, 'lbs', '') AS FLOAT)
-						-- For other cases, assume the value is already in lbs
-						ELSE CAST(Weight AS FLOAT)
-					END
+			-- If the value contains 'kg', convert kg to lbs (1 kg = 2.20462 pounds)
+			WHEN Weight LIKE '%kg' THEN CAST(REPLACE(Weight, 'kg', '') AS FLOAT) * 2.20462
+			-- If the value contains lbs, remove the appended 'lbs' and convert to float
+			WHEN Weight LIKE '%lbs' THEN CAST(REPLACE(Weight, 'lbs', '') AS FLOAT)
+			-- For other cases, assume the value is already in lbs
+			ELSE CAST(Weight AS FLOAT)
+		END
 from FifaData.dbo.FIFA2021DATA
 
 
@@ -110,20 +110,7 @@ drop column  POT, BOV
 alter table FifaData.dbo.FIFA2021DATA
 add ValueIN$ float, WageIN$ float, Release_ClauseIN$ float
 
--- Updating the newly created columns with the refined values in the similar columns
-update FifaData.dbo.FIFA2021DATA
-set ValueIN$ = 
-			case
-				-- Eliminate "â‚¬", "M", convert to million then convert to $ using $1.183 per euro xchnage rate
-				when Value like '%â‚¬%' and Value like '%M%' then (cast(replace(replace(Value, 'â‚¬', ''), 'M', '') as float) * 1000000) * 1.183
-				-- Eliminate "â‚¬", "K", convert to thousand then convert to $ using $1.183 per euro xchnage rate
-				when Value like '%â‚¬%' and Value like '%K%' then (cast(replace(replace(Value, 'â‚¬', ''), 'K', '') as float) * 1000) * 1.183
-				-- Eliminate "â‚¬", convert to float then convert to $ using $1.183 per euro xchnage rate
-				else cast(replace(Value, 'â‚¬', '') as float) * 1.183
-			end
-from FifaData.dbo.FIFA2021DATA
-
-
+	
 update FifaData.dbo.FIFA2021DATA
 set ValueIN$ = 
 			case
