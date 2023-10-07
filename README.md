@@ -16,7 +16,8 @@ The steps I executed during the data cleaning project within MSSMS encompassed t
 By meticulously following these steps, I aimed to transform the FIFA 2021 dataset into a clean, well-organized, and error-free resource, ready for in-depth analysis and valuable insights. This project serves as a testament to my data wrangling skills and my ability to turn challenging data into an asset for decision-making.
 
 ## LET’S GET STARTED!!!
-You can take a look at the entire SQL code here on my GitHub profile.
+You can take a look at the entire SQL code [[Link Text](https://github.com/Korede34/DATA-CLEANING-PROJECT-WITH-SQL/blob/main/FifaDataQuery.sql)](URL)
+ on my GitHub profile.
 I used Microsoft SQL Server Management Studio to develop this project.
 
 ## DATA DISCOVERY
